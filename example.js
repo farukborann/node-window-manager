@@ -1,12 +1,5 @@
 const { windowManager } = require("./dist/index");
 
-const requiredNodeVersion = '13.11.0';
-const currentNodeVersion = process.versions.node;
-
-if (currentNodeVersion < requiredNodeVersion) {
-  console.warn(`Warning: Node.js version is too low. Required: ${requiredNodeVersion}, Current: ${currentNodeVersion}`);
-}
-
 console.log(windowManager.requestAccessibility()); // required on macOS
 
 const window = windowManager.getActiveWindow();
