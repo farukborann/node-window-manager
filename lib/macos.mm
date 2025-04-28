@@ -37,9 +37,8 @@ NSDictionary* getWindowInfo(int handle) {
     }
   }
 
-  if (windowList) {
-    CFRelease(windowList);
-  }
+  CFRelease(windowList);
+
   return NULL;
 }
 
@@ -55,7 +54,7 @@ AXUIElementRef getAXWindow(int pid, int handle) {
     CGWindowID windowId;
     _AXUIElementGetWindow(window, &windowId);
 
-    if (windowId == handle) {
+    if ((int)windowId == handle) {
       // Retain returned window so it doesn't get released with rest of list
       CFRetain(window);
       CFRelease(windows);
@@ -115,23 +114,21 @@ Napi::Array getWindows(const Napi::CallbackInfo &info) {
     NSNumber *windowNumber = info[(id)kCGWindowNumber];
 
     auto app = [NSRunningApplication runningApplicationWithProcessIdentifier: [ownerPid intValue]];
-    auto path = app ? [app.bundleURL.path UTF8String] : "";
+    auto path = app ? [app.bundleURL.path UTF8String] : NULL;
 
-    if (app && path != "") {
+    if (app && path != NULL) {
       vec.push_back(Napi::Number::New(env, [windowNumber intValue]));
     }
   }
 
   auto arr = Napi::Array::New(env, vec.size());
 
-  for (int i = 0; i < vec.size(); i++) {
+  for (int i = 0; i < (int)vec.size(); i++) {
     arr[i] = vec[i];
   }
 
-  if (windowList) {
-    CFRelease(windowList);
-  }
-  
+  CFRelease(windowList);
+
   return arr;
 }
 
@@ -302,6 +299,130 @@ Napi::Boolean setWindowMaximized(const Napi::CallbackInfo &info) {
   return Napi::Boolean::New(env, true);
 }
 
+Napi::Array getAXWindows(const Napi::CallbackInfo &info) {
+  Napi::Env env{info.Env()};
+  int handle = info[0].As<Napi::Number>().Int32Value();
+
+  auto wInfo = getWindowInfo(handle);
+  if (!wInfo) {
+    return Napi::Array::New(env);
+  }
+  NSNumber *ownerPid = wInfo[(id)kCGWindowOwnerPID];
+  int pid = [ownerPid intValue];
+
+  AXUIElementRef app = AXUIElementCreateApplication(pid);
+  CFArrayRef windows = NULL;
+  AXUIElementCopyAttributeValues(app, kAXWindowsAttribute, 0, 100, &windows);
+
+  Napi::Array result = Napi::Array::New(env);
+  if (windows) {
+    CFIndex count = CFArrayGetCount(windows);
+    uint32_t idx = 0;
+
+    for (CFIndex i = 0; i < count; i++) {
+      AXUIElementRef win = (AXUIElementRef)CFArrayGetValueAtIndex(windows, i);
+      CGWindowID windowId;
+      Napi::Object obj = Napi::Object::New(env);
+    
+      if (_AXUIElementGetWindow(win, &windowId) == kAXErrorSuccess) {
+        obj.Set("handle", (int)windowId);
+      } else {
+        obj.Set("handle", -1);
+      }
+
+      CFTypeRef titleValue = NULL;
+      if (AXUIElementCopyAttributeValue(win, kAXTitleAttribute, &titleValue) == kAXErrorSuccess && titleValue) {
+        if (CFGetTypeID(titleValue) == CFStringGetTypeID()) {
+          NSString *title = (__bridge NSString *)titleValue;
+          obj.Set("title", std::string([title UTF8String]));
+        }
+        CFRelease(titleValue);
+      } else {
+        obj.Set("title", "");
+      }
+      
+      CFTypeRef roleValue = NULL;
+      if (AXUIElementCopyAttributeValue(win, kAXRoleAttribute, &roleValue) == kAXErrorSuccess && roleValue) {
+        if (CFGetTypeID(roleValue) == CFStringGetTypeID()) {
+          NSString *role = (__bridge NSString *)roleValue;
+          obj.Set("role", std::string([role UTF8String]));
+        }
+        CFRelease(roleValue);
+      } else {
+        obj.Set("role", "");
+      }
+      
+      CFTypeRef subroleValue = NULL;
+      if (AXUIElementCopyAttributeValue(win, kAXSubroleAttribute, &subroleValue) == kAXErrorSuccess && subroleValue) {
+        if (CFGetTypeID(subroleValue) == CFStringGetTypeID()) {
+          NSString *subrole = (__bridge NSString *)subroleValue;
+          obj.Set("subrole", std::string([subrole UTF8String]));
+        }
+        CFRelease(subroleValue);
+      } else {
+        obj.Set("subrole", "");
+      }
+      
+      CFTypeRef focusedValue = NULL;
+      bool isFocused = false;
+      if (AXUIElementCopyAttributeValue(win, kAXFocusedAttribute, &focusedValue) == kAXErrorSuccess && focusedValue) {
+        if (CFGetTypeID(focusedValue) == CFBooleanGetTypeID()) {
+          isFocused = CFBooleanGetValue((CFBooleanRef)focusedValue);
+        }
+        CFRelease(focusedValue);
+      }
+      obj.Set("focused", isFocused);
+
+      result[idx++] = obj;
+    }
+
+    CFRelease(windows);
+  }
+
+  CFRelease((CFPropertyListRef)wInfo);
+  
+  return result;
+}
+
+Napi::Boolean focusAXWindow(const Napi::CallbackInfo &info) {
+  Napi::Env env{info.Env()};
+  
+  int handle = info[0].As<Napi::Number>().Int32Value();
+  auto wInfo = getWindowInfo(handle);
+  if (!wInfo) {
+    return Napi::Boolean::New(env, false);
+  }
+
+  NSNumber *ownerPid = wInfo[(id)kCGWindowOwnerPID];
+  int pid = [ownerPid intValue];
+
+  AXUIElementRef app = AXUIElementCreateApplication(pid);
+  CFArrayRef windows = NULL;
+  AXUIElementCopyAttributeValues(app, kAXWindowsAttribute, 0, 100, &windows);
+
+  bool focused = false;
+  if (windows) {
+    CFIndex count = CFArrayGetCount(windows);
+
+    for (CFIndex i = 0; i < count; i++) {
+      AXUIElementRef win = (AXUIElementRef)CFArrayGetValueAtIndex(windows, i);
+      CGWindowID windowId;
+    
+      if (_AXUIElementGetWindow(win, &windowId) == kAXErrorSuccess && (int)windowId == handle) {
+        AXUIElementSetAttributeValue(win, kAXMainAttribute, kCFBooleanTrue);
+        AXUIElementSetAttributeValue(win, kAXFocusedAttribute, kCFBooleanTrue);
+        focused = true;
+        break;
+      }
+    }
+    
+    CFRelease(windows);
+  }
+  
+  CFRelease((CFPropertyListRef)wInfo);
+  
+  return Napi::Boolean::New(env, focused);
+}
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "getWindows"),
@@ -324,6 +445,10 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
                 Napi::Function::New(env, setWindowMaximized));
     exports.Set(Napi::String::New(env, "requestAccessibility"),
                 Napi::Function::New(env, requestAccessibility));
+    exports.Set(Napi::String::New(env, "getAXWindows"),
+                Napi::Function::New(env, getAXWindows));
+    exports.Set(Napi::String::New(env, "focusAXWindow"),
+                Napi::Function::New(env, focusAXWindow));
 
     return exports;
 }

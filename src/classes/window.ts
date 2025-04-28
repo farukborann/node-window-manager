@@ -1,8 +1,10 @@
 import { addon } from "..";
 import extractFileIcon from "extract-file-icon";
-import { Monitor } from "./monitor";
-import { IRectangle } from "../interfaces";
+
+import { AXWindow } from "./ax-window";
 import { EmptyMonitor } from "./empty-monitor";
+import { Monitor } from "./monitor";
+import { IAXWindow, IRectangle } from "../interfaces";
 
 export class Window {
   public id: number;
@@ -171,5 +173,15 @@ export class Window {
   getOwner() {
     if (!addon || !addon.getWindowOwner) return;
     return new Window(addon.getWindowOwner(this.id));
+  }
+
+  /**
+   * Returns all AXWindows for this window's process (macOS only)
+   */
+  getAXWindows(): AXWindow[] {
+    if (process.platform !== "darwin" || !addon || !addon.getAXWindows)
+      return [];
+    const arr = addon.getAXWindows(this.id) || [];
+    return arr.map((data: IAXWindow) => new AXWindow(data));
   }
 }
