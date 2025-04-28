@@ -1,9 +1,11 @@
-import { Window } from "./classes/window";
 import { EventEmitter } from "events";
 import { platform } from "os";
-import { Monitor } from "./classes/monitor";
-import { EmptyMonitor } from "./classes/empty-monitor";
 import { resolve } from "path";
+
+import { EmptyMonitor } from "./classes/empty-monitor";
+import { Monitor } from "./classes/monitor";
+import { Window } from "./classes/window";
+import { IEmptyWindowOptions } from "./interfaces";
 
 let addon: any;
 
@@ -94,7 +96,7 @@ class WindowManager extends EventEmitter {
     return addon.createProcess(path, cmd);
   };
 
-  createEmptyWindow = (opts: any = {}): Window | undefined => {
+  createEmptyWindow = (opts: IEmptyWindowOptions = {}): Window | undefined => {
     if (!addon || !addon.createEmptyWindow) return;
     const id = addon.createEmptyWindow(opts);
     if (!id) return;
