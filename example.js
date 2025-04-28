@@ -51,3 +51,31 @@ windowManager.on("window-activated", (window) => {
   console.log("\n======== Window Activated ========");
   printWindow(window);
 });
+
+// Empty window test
+console.log("\nEmpty window test:");
+const empty1 = windowManager.createEmptyWindow({
+  title: "Empty 1",
+  width: 300,
+  height: 200,
+  show: true,
+  frame: false,
+  transparent: true,
+  resizable: false,
+  movable: false,
+  alwaysOnTop: true,
+  skipTaskbar: true,
+});
+
+if (empty1) {
+  console.log("Created empty1:", empty1.getTitle(), empty1.getBounds());
+  console.log("empty1 id:", empty1 && empty1.id);
+  console.log("empty1 isWindow:", empty1 && empty1.isWindow());
+  console.log("empty1 isVisible:", empty1 && empty1.isVisible());
+  console.log("empty1 title:", empty1 && empty1.getTitle());
+  console.log("empty1 bounds:", empty1 && empty1.getBounds());
+  setTimeout(() => {
+    console.log("Closing empty1 window...");
+    windowManager.exitEmptyWindow(empty1.id);
+  }, 2000);
+}

@@ -424,6 +424,74 @@ Napi::Boolean focusAXWindow(const Napi::CallbackInfo &info) {
   return Napi::Boolean::New(env, focused);
 }
 
+Napi::Value createEmptyWindow(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::Object opts = info[0].IsObject() ? info[0].As<Napi::Object>() : Napi::Object::New(env);
+
+  NSString *title = opts.Has("title") ? [NSString stringWithUTF8String: opts.Get("title").ToString().Utf8Value().c_str()] : @"Empty Window";
+  int width = opts.Has("width") ? opts.Get("width").ToNumber().Int32Value() : 400;
+  int height = opts.Has("height") ? opts.Get("height").ToNumber().Int32Value() : 300;
+  bool show = opts.Has("show") ? opts.Get("show").ToBoolean().Value() : true;
+  bool frame = opts.Has("frame") ? opts.Get("frame").ToBoolean().Value() : true;
+  bool transparent = opts.Has("transparent") ? opts.Get("transparent").ToBoolean().Value() : false;
+  bool resizable = opts.Has("resizable") ? opts.Get("resizable").ToBoolean().Value() : false;
+  bool movable = opts.Has("movable") ? opts.Get("movable").ToBoolean().Value() : true;
+  bool alwaysOnTop = opts.Has("alwaysOnTop") ? opts.Get("alwaysOnTop").ToBoolean().Value() : false;
+  bool skipTaskbar = opts.Has("skipTaskbar") ? opts.Get("skipTaskbar").ToBoolean().Value() : false;
+
+  NSUInteger styleMask = 0;
+  if (frame) {
+    styleMask |= NSWindowStyleMaskTitled;
+  }
+  if (resizable) {
+    styleMask |= NSWindowStyleMaskResizable;
+  }
+  if (movable) {
+    styleMask |= NSWindowStyleMaskMiniaturizable;
+  }
+  styleMask |= NSWindowStyleMaskClosable;
+
+  NSRect rect = NSMakeRect(0, 0, width, height);
+  NSWindow *window = [[NSWindow alloc] initWithContentRect:rect
+                                                  styleMask:styleMask
+                                                    backing:NSBackingStoreBuffered
+                                                      defer:NO];
+  [window setTitle:title];
+  [window setOpaque:!transparent];
+  [window setBackgroundColor:transparent ? [NSColor clearColor] : [NSColor windowBackgroundColor]];
+  [window setReleasedWhenClosed:NO];
+  if (!frame) {
+    [window setStyleMask:([window styleMask] & ~NSWindowStyleMaskTitled)];
+  }
+  if (alwaysOnTop) {
+    [window setLevel:NSFloatingWindowLevel];
+  }
+  if (skipTaskbar) {
+    [window setCollectionBehavior:NSWindowCollectionBehaviorTransient | NSWindowCollectionBehaviorIgnoresCycle];
+  }
+  if (!show) {
+    [window orderOut:nil];
+  } else {
+    [window makeKeyAndOrderFront:nil];
+  }
+  // Store window in a global map for later closing
+  static std::map<int, NSWindow*> emptyWindows;
+  emptyWindows[(int)[window windowNumber]] = window;
+  return Napi::Number::New(env, (int)[window windowNumber]);
+}
+
+Napi::Value exitEmptyWindow(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  int windowNumber = info[0].As<Napi::Number>().Int32Value();
+  static std::map<int, NSWindow*> emptyWindows;
+  auto it = emptyWindows.find(windowNumber);
+  if (it != emptyWindows.end()) {
+    [it->second close];
+    emptyWindows.erase(it);
+  }
+  return env.Undefined();
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "getWindows"),
                 Napi::Function::New(env, getWindows));
@@ -449,6 +517,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
                 Napi::Function::New(env, getAXWindows));
     exports.Set(Napi::String::New(env, "focusAXWindow"),
                 Napi::Function::New(env, focusAXWindow));
+    exports.Set(Napi::String::New(env, "createEmptyWindow"), Napi::Function::New(env, createEmptyWindow));
+    exports.Set(Napi::String::New(env, "exitEmptyWindow"), Napi::Function::New(env, exitEmptyWindow));
 
     return exports;
 }
