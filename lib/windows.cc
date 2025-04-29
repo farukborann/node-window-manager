@@ -394,81 +394,6 @@ Napi::Object getMonitorInfo (const Napi::CallbackInfo& info) {
     return obj;
 }
 
-// Empty window class registration helper
-#define WIN_EMPTY_CLASS_NAME "NodeEmptyWindowClass"
-
-LRESULT CALLBACK EmptyWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) {
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
-        default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-    }
-    return 0;
-}
-
-Napi::Value createEmptyWindow(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    Napi::Object opts = info[0].IsObject() ? info[0].As<Napi::Object>() : Napi::Object::New(env);
-
-    std::string title = opts.Has("title") ? opts.Get("title").ToString().Utf8Value() : "Empty Window";
-    int width = opts.Has("width") ? opts.Get("width").ToNumber().Int32Value() : 400;
-    int height = opts.Has("height") ? opts.Get("height").ToNumber().Int32Value() : 300;
-    bool show = opts.Has("show") ? opts.Get("show").ToBoolean().Value() : true;
-    bool frame = opts.Has("frame") ? opts.Get("frame").ToBoolean().Value() : true;
-    bool transparent = opts.Has("transparent") ? opts.Get("transparent").ToBoolean().Value() : false;
-    bool resizable = opts.Has("resizable") ? opts.Get("resizable").ToBoolean().Value() : false;
-    bool movable = opts.Has("movable") ? opts.Get("movable").ToBoolean().Value() : true;
-    bool alwaysOnTop = opts.Has("alwaysOnTop") ? opts.Get("alwaysOnTop").ToBoolean().Value() : false;
-    bool skipTaskbar = opts.Has("skipTaskbar") ? opts.Get("skipTaskbar").ToBoolean().Value() : false;
-
-    // Register window class if not already
-    static bool classRegistered = false;
-    if (!classRegistered) {
-        WNDCLASS wc = {0};
-        wc.lpfnWndProc = EmptyWndProc;
-        wc.hInstance = GetModuleHandle(NULL);
-        wc.lpszClassName = WIN_EMPTY_CLASS_NAME;
-        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-        RegisterClass(&wc);
-        classRegistered = true;
-    }
-
-    DWORD style = WS_OVERLAPPEDWINDOW;
-    DWORD exStyle = 0;
-    if (!frame) style = WS_POPUP;
-    if (transparent) exStyle |= WS_EX_LAYERED;
-    if (alwaysOnTop) exStyle |= WS_EX_TOPMOST;
-    if (skipTaskbar) exStyle |= WS_EX_TOOLWINDOW;
-    if (!resizable) style &= ~WS_THICKFRAME;
-    if (!movable) style &= ~WS_CAPTION;
-
-    HWND hwnd = CreateWindowEx(
-        exStyle,
-        WIN_EMPTY_CLASS_NAME,
-        get_wstring(title).c_str(),
-        style,
-        CW_USEDEFAULT, CW_USEDEFAULT, width, height,
-        NULL, NULL, GetModuleHandle(NULL), NULL
-    );
-    if (!hwnd) return env.Null();
-    if (transparent) SetLayeredWindowAttributes(hwnd, 0, 200, LWA_ALPHA);
-    if (show) {
-        ShowWindow(hwnd, SW_SHOWNORMAL);
-        UpdateWindow(hwnd);
-    }
-    return Napi::Number::New(env, reinterpret_cast<int64_t>(hwnd));
-}
-
-Napi::Value exitEmptyWindow(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    HWND hwnd = getValueFromCallbackData<HWND>(info, 0);
-    if (!IsWindow(hwnd)) return env.Null();
-    PostMessage(hwnd, WM_CLOSE, 0, 0);
-    return env.Undefined();
-}
-
 Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "getActiveWindow"), Napi::Function::New (env, getActiveWindow));
     exports.Set (Napi::String::New (env, "getMonitorFromWindow"), Napi::Function::New (env, getMonitorFromWindow));
@@ -494,8 +419,6 @@ Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "getMonitors"), Napi::Function::New (env, getMonitors));
     exports.Set (Napi::String::New (env, "createProcess"), Napi::Function::New (env, createProcess));
     exports.Set (Napi::String::New (env, "getProcessMainWindow"), Napi::Function::New (env, getProcessMainWindow));
-    exports.Set (Napi::String::New (env, "createEmptyWindow"), Napi::Function::New (env, createEmptyWindow));
-    exports.Set (Napi::String::New (env, "exitEmptyWindow"), Napi::Function::New (env, exitEmptyWindow));
 
     return exports;
 }

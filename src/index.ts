@@ -3,13 +3,13 @@ import { EventEmitter } from "events";
 import { platform } from "os";
 import { Monitor } from "./classes/monitor";
 import { EmptyMonitor } from "./classes/empty-monitor";
-import { resolve } from "path";
+import { resolve } from 'path';
 
 let addon: any;
 
 if (platform() === "win32" || platform() === "darwin") {
-  const ADDON_PATH = process.env.NODE_ENV != "dev" ? "Release" : "Debug";
-  addon = require(`node-gyp-build`)(resolve(__dirname, ".."));
+  const ADDON_PATH = (process.env.NODE_ENV != "dev") ? "Release" : "Debug";
+  addon = require(`node-gyp-build`)(resolve(__dirname, '..'));
 }
 
 let interval: any = null;
@@ -24,8 +24,8 @@ class WindowManager extends EventEmitter {
 
     if (!addon) return;
 
-    this.on("newListener", (event) => {
-      if (event === "window-activated") {
+    this.on("newListener", event => {
+      if (event === 'window-activated') {
         lastId = addon.getActiveWindow();
       }
 
@@ -34,7 +34,7 @@ class WindowManager extends EventEmitter {
       if (event === "window-activated") {
         interval = setInterval(async () => {
           const win = addon.getActiveWindow();
-
+          
           if (lastId !== win) {
             lastId = win;
             this.emit("window-activated", new Window(win));
@@ -47,21 +47,21 @@ class WindowManager extends EventEmitter {
       registeredEvents.push(event);
     });
 
-    this.on("removeListener", (event) => {
+    this.on("removeListener", event => {
       if (this.listenerCount(event) > 0) return;
 
       if (event === "window-activated") {
         clearInterval(interval);
       }
 
-      registeredEvents = registeredEvents.filter((x) => x !== event);
+      registeredEvents = registeredEvents.filter(x => x !== event);
     });
   }
 
   requestAccessibility = () => {
     if (!addon || !addon.requestAccessibility) return true;
     return addon.requestAccessibility();
-  };
+  }
 
   getActiveWindow = () => {
     if (!addon) return;
@@ -70,10 +70,7 @@ class WindowManager extends EventEmitter {
 
   getWindows = (): Window[] => {
     if (!addon || !addon.getWindows) return [];
-    return addon
-      .getWindows()
-      .map((win: any) => new Window(win))
-      .filter((x: Window) => x.isWindow());
+    return addon.getWindows().map((win: any) => new Window(win)).filter((x: Window) => x.isWindow());
   };
 
   getMonitors = (): Monitor[] => {
@@ -82,28 +79,16 @@ class WindowManager extends EventEmitter {
   };
 
   getPrimaryMonitor = (): Monitor | EmptyMonitor => {
-    if (process.platform === "win32") {
-      return this.getMonitors().find((x) => x.isPrimary);
+    if (process.platform === 'win32') {
+      return this.getMonitors().find(x => x.isPrimary);
     } else {
       return new EmptyMonitor();
     }
-  };
+  }
 
   createProcess = (path: string, cmd = ""): number => {
     if (!addon || !addon.createProcess) return;
     return addon.createProcess(path, cmd);
-  };
-
-  createEmptyWindow = (opts: any = {}): Window | undefined => {
-    if (!addon || !addon.createEmptyWindow) return;
-    const id = addon.createEmptyWindow(opts);
-    if (!id) return;
-    return new Window(id);
-  };
-
-  exitEmptyWindow = (id: number) => {
-    if (!addon || !addon.exitEmptyWindow) return;
-    return addon.exitEmptyWindow(id);
   };
 }
 
