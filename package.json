@@ -1,7 +1,7 @@
 {
   "name": "node-window-manager",
-  "version": "2.2.4",
-  "description": "Manage windows in macOS, Windows and Linux",
+  "version": "2.2.5",
+  "description": "Manage windows in macOS, Windows",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -21,7 +21,6 @@
     "window-manager",
     "native",
     "macos",
-    "linux",
     "windows"
   ],
   "author": "sentialx",

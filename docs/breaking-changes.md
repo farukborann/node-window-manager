@@ -38,3 +38,7 @@ const { title } = window.getInfo();
 // Replace with
 const title = window.getTitle();
 ```
+
+## Released in v2.2.5
+
+- **macOS AXWindow support added:** You can now use `window.getAXWindows()` to access accessibility windows (AXWindow) for a window's process. See the Window and AXWindow documentation for details.

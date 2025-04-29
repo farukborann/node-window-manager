@@ -81,6 +81,7 @@ Returns [`Monitor`](monitor.md)
 Returns `boolean` - whether the window is a valid window.
 
 #### win.isVisible() `Windows`
+
 Returns `boolean` - whether the window is visible or not.
 
 #### win.getOwner() `Windows`
@@ -97,3 +98,31 @@ Returns `Window`
 - `size` number - can be `16`, `32`, `64` or `256`. By default it's `64`.
 
 Returns a png Buffer
+
+#### win.getAXWindows() `macOS`
+
+Returns an array of AXWindow objects for the window's process. Each AXWindow represents an accessibility window (AXWindow) in the same process.
+
+Returns: `AXWindow[]`
+
+Each `AXWindow` has the following properties:
+
+- `handle`: number
+- `title`: string
+- `role`: string
+- `subrole`: string
+- `focused`: boolean
+
+And the following method:
+
+- `focus()`: Focuses this AXWindow (returns boolean, macOS only)
+
+Example:
+
+```js
+const axWindows = window.getAXWindows();
+axWindows.forEach((axWin) => {
+  console.log(axWin.title, axWin.role, axWin.subrole, axWin.focused);
+  if (!axWin.focused) axWin.focus();
+});
+```

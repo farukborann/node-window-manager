@@ -3,7 +3,7 @@
 Get monitors and opened windows.
 
 ```typescript
-import { windowManager } from 'node-window-manager';
+import { windowManager } from "node-window-manager";
 
 windowManager.requestAccessibility();
 
@@ -16,7 +16,7 @@ console.log(window.getTitle());
 ### Instance methods
 
 #### windowManager.requestAccessibility() `macOS`
-  
+
 If the accessibility permission is not granted on `macOS`, it opens an accessibility permission request dialog.
 
 The method is required to call before calling the following methods:
@@ -49,6 +49,21 @@ Returns [`Window[]`](window.md)
 > NOTE: on macOS this method returns an `EmptyMonitor` object for compatibility.
 
 - Returns [`Monitor`](monitor.md)
+
+### macOS AXWindow (Accessibility Window) Support
+
+On macOS, you can access all accessibility windows (AXWindow) for a window's process:
+
+```js
+const axWindows = window.getAXWindows();
+axWindows.forEach((axWin) => {
+  console.log(axWin.title, axWin.role, axWin.subrole, axWin.focused);
+  if (!axWin.focused) axWin.focus();
+});
+```
+
+- Only available on macOS.
+- See Window.getAXWindows() and AXWindow class in the window documentation.
 
 ### Events
 
