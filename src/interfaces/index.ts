@@ -1,4 +1,3 @@
-
 export interface IRectangle {
   x?: number;
   y?: number;
@@ -19,17 +18,4 @@ export interface IAXWindow {
   role: string;
   subrole: string;
   focused: boolean;
-}
-
-export interface IEmptyWindowOptions {
-  title?: string;
-  width?: number;
-  height?: number;
-  show?: boolean;
-  frame?: boolean;
-  transparent?: boolean;
-  resizable?: boolean;
-  movable?: boolean;
-  alwaysOnTop?: boolean;
-  skipTaskbar?: boolean;
 }
