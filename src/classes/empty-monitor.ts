@@ -15,7 +15,7 @@ export class EmptyMonitor {
 
   getScaleFactor(): number {
     return 1;
-  };
+  }
 
   isValid(): boolean {
     return false;

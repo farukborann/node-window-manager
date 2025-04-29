@@ -1,11 +1,12 @@
 import { addon } from "..";
-import { IMonitorInfo, IRectangle } from "../interfaces";
 import { release } from "os";
+
+import { IMonitorInfo, IRectangle } from "../interfaces";
 
 const getMonitorInfo = (id: number): IMonitorInfo => {
   if (!addon || !addon.getMonitorInfo) return;
   return addon.getMonitorInfo(id);
-}
+};
 
 export class Monitor {
   public id: number;
@@ -31,14 +32,14 @@ export class Monitor {
 
     const numbers = release()
       .split(".")
-      .map(d => parseInt(d, 10));
+      .map((d) => parseInt(d, 10));
 
     if (numbers[0] > 8 || (numbers[0] === 8 && numbers[1] >= 1)) {
       return addon.getMonitorScaleFactor(this.id);
     }
 
     return 1;
-  };
+  }
 
   isValid(): boolean {
     return addon && addon.getMonitorInfo;
