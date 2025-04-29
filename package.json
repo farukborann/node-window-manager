@@ -36,7 +36,7 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
-    "extract-file-icon": "^0.3.2",
+    "extract-file-icon": "github:farukborann/extract-file-icon",
     "node-addon-api": "2.0.0",
     "node-gyp-build": "^4.8.3"
   }
