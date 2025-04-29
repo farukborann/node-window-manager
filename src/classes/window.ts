@@ -1,5 +1,4 @@
 import { addon } from "..";
-import extractFileIcon from "extract-file-icon";
 
 import { AXWindow } from "./ax-window";
 import { EmptyMonitor } from "./empty-monitor";
@@ -150,10 +149,6 @@ export class Window {
   getOpacity() {
     if (!addon || !addon.getWindowOpacity) return 1;
     return addon.getWindowOpacity(this.id);
-  }
-
-  getIcon(size: 16 | 32 | 64 | 256 = 64) {
-    return extractFileIcon(this.path, size);
   }
 
   setOwner(window: Window | null | number) {
