@@ -225,10 +225,10 @@ Napi::Boolean setWindowBounds(const Napi::CallbackInfo &info) {
   auto handle = info[0].As<Napi::Number>().Int32Value();
   auto bounds = info[1].As<Napi::Object>();
 
-  auto x = bounds.Get("x").As<Napi::Number>().DoubleValue();
-  auto y = bounds.Get("y").As<Napi::Number>().DoubleValue();
-  auto width = bounds.Get("width").As<Napi::Number>().DoubleValue();
-  auto height = bounds.Get("height").As<Napi::Number>().DoubleValue();
+  auto x = bounds.Get("x").Unwrap().As<Napi::Number>().DoubleValue();
+  auto y = bounds.Get("y").Unwrap().As<Napi::Number>().DoubleValue();
+  auto width = bounds.Get("width").Unwrap().As<Napi::Number>().DoubleValue();
+  auto height = bounds.Get("height").Unwrap().As<Napi::Number>().DoubleValue();
 
   auto win = getAXWindowById(handle);
 
