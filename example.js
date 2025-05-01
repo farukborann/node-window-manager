@@ -1,4 +1,3 @@
-
 const { windowManager } = require("./dist/index");
 
 function printWindow(window) {
@@ -46,8 +45,35 @@ windowManager.getWindows().forEach((window) => {
   }
 });
 
-// window-activated eventinde aktif pencereyi ve AXWindow'larını yazdır
-windowManager.on("window-activated", (window) => {
-  console.log("\n======== Window Activated ========");
-  printWindow(window);
+// window-created eventinde yeni pencereyi ve AXWindow'larını yazdır
+windowManager.onWindowCreated(({ window }) => {
+  console.log("[window-created]", window.getTitle(), window.id);
 });
+
+// window-destroyed eventinde silinen pencereyi yazdır
+windowManager.onWindowDestroyed(({ windowId }) => {
+  console.log("[window-destroyed]", windowId);
+});
+
+// // window-title-changed eventinde pencere başlığının değiştiğini yazdır
+// windowManager.onWindowTitleChanged(({ window, oldTitle, newTitle }) => {
+//   console.log(
+//     `[window-title-changed] ${window.id}: '${oldTitle}' -> '${newTitle}'`
+//   );
+// });
+
+// // window-bounds-changed eventinde pencere sınırlarının değiştiğini yazdır
+// windowManager.onWindowBoundsChanged(({ window, oldBounds, newBounds }) => {
+//   console.log(
+//     `[window-bounds-changed] ${window.id}:`,
+//     oldBounds,
+//     "->",
+//     newBounds
+//   );
+// });
+
+// // window-activated eventinde aktif pencereyi ve AXWindow'larını yazdır
+// windowManager.onWindowActivated(({ window }) => {
+//   console.log("[window-activated]", window.getTitle(), window.id);
+//   printWindow(window);
+// });

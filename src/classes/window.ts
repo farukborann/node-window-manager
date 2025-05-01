@@ -123,12 +123,15 @@ export class Window {
   }
 
   isWindow(): boolean {
-    if (!addon) return;
-
-    if (process.platform === "win32") {
-      return this.path && this.path !== "" && addon.isWindow(this.id);
-    } else if (process.platform === "darwin") {
-      return this.path && this.path !== "" && !!addon.initWindow(this.id);
+    if (!addon) return false;
+    try {
+      if (process.platform === "win32") {
+        return this.path && this.path !== "" && addon.isWindow(this.id);
+      } else if (process.platform === "darwin") {
+        return this.path && this.path !== "" && !!addon.initWindow(this.id);
+      }
+    } catch (e) {
+      return false;
     }
   }
 
