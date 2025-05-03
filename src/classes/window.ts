@@ -184,4 +184,17 @@ export class Window {
     const arr = addon.getAXWindows(this.id) || [];
     return arr.map((data: IAXWindow) => new AXWindow(data));
   }
+
+  /**
+   * Simulates a focus cycle by unfocusing and refocusing the window after a short delay
+   * @returns Promise that resolves when the focus cycle is complete
+   */
+  async simulateFocusCycle(): Promise<void> {
+    if (!addon || !addon.simulateFocusCycle) return;
+    return new Promise((resolve) => {
+      addon.simulateFocusCycle(this.id);
+      // Native code handles the delay, so we can resolve immediately
+      resolve();
+    });
+  }
 }
