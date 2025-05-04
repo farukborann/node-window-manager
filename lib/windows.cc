@@ -397,6 +397,48 @@ Napi::Object getMonitorInfo (const Napi::CallbackInfo& info) {
     return obj;
 }
 
+Napi::Boolean forceFocus(const Napi::CallbackInfo& info) {
+    Napi::Env env{ info.Env() };
+    auto handle{ getValueFromCallbackData<HWND>(info, 0) };
+
+    if (!::IsWindow(handle)) {
+        return Napi::Boolean::New(env, false);
+    }
+
+    // Get the current foreground window and thread IDs
+    HWND hCurWnd = ::GetForegroundWindow();
+    DWORD dwMyID = ::GetCurrentThreadId();
+    DWORD dwCurID = ::GetWindowThreadProcessId(hCurWnd, NULL);
+
+    // Attach our thread's input to the current thread
+    ::AttachThreadInput(dwMyID, dwCurID, TRUE);
+
+    // Get and store the current foreground lock timeout
+    DWORD lockTimeOut = 0;
+    ::SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &lockTimeOut, 0);
+    ::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
+
+    // Allow any window to set foreground
+    ::AllowSetForegroundWindow(ASFW_ANY);
+
+    // Set the window as foreground
+    ::SetForegroundWindow(handle);
+
+    // Restore the original foreground lock timeout
+    ::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)lockTimeOut, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
+
+    // Detach thread input
+    ::AttachThreadInput(dwMyID, dwCurID, FALSE);
+
+    // Additional focus enforcement
+    ::SetWindowPos(handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    ::SetWindowPos(handle, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    ::SetFocus(handle);
+    ::SetActiveWindow(handle);
+
+    return Napi::Boolean::New(env, true);
+}
+
 Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "getActiveWindow"), Napi::Function::New (env, getActiveWindow));
     exports.Set (Napi::String::New (env, "getMonitorFromWindow"), Napi::Function::New (env, getMonitorFromWindow));
@@ -422,6 +464,7 @@ Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "getMonitors"), Napi::Function::New (env, getMonitors));
     exports.Set (Napi::String::New (env, "createProcess"), Napi::Function::New (env, createProcess));
     exports.Set (Napi::String::New (env, "getProcessMainWindow"), Napi::Function::New (env, getProcessMainWindow));
+    exports.Set (Napi::String::New (env, "forceFocus"), Napi::Function::New (env, forceFocus));
 
     return exports;
 }
