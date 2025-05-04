@@ -51,20 +51,3 @@ windowManager.on("window-activated", (window) => {
   console.log("\n======== Window Activated ========");
   printWindow(window);
 });
-
-// Simulate focus cycle example
-async function simulateFocusCycleExample() {
-  const activeWindow = windowManager.getActiveWindow();
-  if (activeWindow) {
-    console.log("\n======== Simulating Focus Cycle ========");
-    console.log(`Window before focus cycle: ${activeWindow.getTitle()}`);
-    
-    // Simulate focus cycle
-    await activeWindow.simulateFocusCycle();
-    
-    console.log("Focus cycle completed");
-  }
-}
-
-// Run the example after a delay to ensure other examples are visible
-setTimeout(simulateFocusCycleExample, 5000);
