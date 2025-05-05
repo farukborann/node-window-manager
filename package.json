@@ -11,7 +11,8 @@
     "rebuild": "node-gyp rebuild",
     "rebuild-dev": "npm run rebuild -- --debug",
     "prepublishOnly": "npm run rebuild",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "example": "npm run build && node example.js"
   },
   "repository": {
     "type": "git",
