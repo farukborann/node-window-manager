@@ -42,8 +42,8 @@ Process getWindowProcess (HWND handle) {
     wchar_t exeName[MAX_PATH]{};
 
     QueryFullProcessImageNameW (pHandle, 0, exeName, &dwSize);
-    
-    CloseHandle(pHandle);
+
+    CloseHandle (pHandle);
 
     auto wspath (exeName);
     auto path = toUtf8 (wspath);
@@ -79,7 +79,7 @@ HWND find_top_window (DWORD pid) {
 Napi::Number getProcessMainWindow (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
 
-    unsigned long process_id = info[0].ToNumber ().Uint32Value ();
+    unsigned long process_id = info[0].As<Napi::Number> ().Uint32Value ();
 
     auto handle = find_top_window (process_id);
 
@@ -89,12 +89,12 @@ Napi::Number getProcessMainWindow (const Napi::CallbackInfo& info) {
 Napi::Number createProcess (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
 
-    auto path = info[0].ToString ().Utf8Value ();
+    auto path = info[0].As<Napi::String> ().Utf8Value ();
 
     std::string cmd = "";
 
     if (info[1].IsString ()) {
-        cmd = info[1].ToString ().Utf8Value ();
+        cmd = info[1].As<Napi::String> ().Utf8Value ();
     }
 
     STARTUPINFOA sInfo = { sizeof (sInfo) };
@@ -151,7 +151,6 @@ Napi::Array getMonitors (const Napi::CallbackInfo& info) {
         auto i = 0;
 
         for (auto _mon : _monitors) {
-
             arr.Set (i++, Napi::Number::New (env, _mon));
         }
 
@@ -252,7 +251,7 @@ Napi::Boolean toggleWindowTransparency (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
 
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
-    bool toggle{ info[1].As<Napi::Boolean> () };
+    bool toggle{ info[1].As<Napi::Boolean> ().Value () };
     LONG_PTR style{ GetWindowLongPtrA (handle, GWL_EXSTYLE) };
 
     SetWindowLongPtrA (handle, GWL_EXSTYLE, ((toggle) ? (style | WS_EX_LAYERED) : (style & (~WS_EX_LAYERED))));
@@ -277,8 +276,12 @@ Napi::Boolean setWindowBounds (const Napi::CallbackInfo& info) {
     Napi::Object bounds{ info[1].As<Napi::Object> () };
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
 
-    BOOL b{ MoveWindow (handle, bounds.Get ("x").ToNumber (), bounds.Get ("y").ToNumber (),
-                        bounds.Get ("width").ToNumber (), bounds.Get ("height").ToNumber (), true) };
+    int x = static_cast<int> (bounds.Get ("x").Unwrap ().As<Napi::Number> ().Int32Value ());
+    int y = static_cast<int> (bounds.Get ("y").Unwrap ().As<Napi::Number> ().Int32Value ());
+    int width = static_cast<int> (bounds.Get ("width").Unwrap ().As<Napi::Number> ().Int32Value ());
+    int height = static_cast<int> (bounds.Get ("height").Unwrap ().As<Napi::Number> ().Int32Value ());
+
+    BOOL b{ MoveWindow (handle, x, y, width, height, true) };
 
     return Napi::Boolean::New (env, b);
 }
@@ -298,7 +301,7 @@ Napi::Boolean showWindow (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
 
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
-    std::string type{ info[1].As<Napi::String> () };
+    std::string type{ info[1].As<Napi::String> ().Utf8Value () };
 
     DWORD flag{ 0 };
 
@@ -394,6 +397,48 @@ Napi::Object getMonitorInfo (const Napi::CallbackInfo& info) {
     return obj;
 }
 
+Napi::Boolean forceFocus(const Napi::CallbackInfo& info) {
+    Napi::Env env{ info.Env() };
+    auto handle{ getValueFromCallbackData<HWND>(info, 0) };
+
+    if (!::IsWindow(handle)) {
+        return Napi::Boolean::New(env, false);
+    }
+
+    // Get the current foreground window and thread IDs
+    HWND hCurWnd = ::GetForegroundWindow();
+    DWORD dwMyID = ::GetCurrentThreadId();
+    DWORD dwCurID = ::GetWindowThreadProcessId(hCurWnd, NULL);
+
+    // Attach our thread's input to the current thread
+    ::AttachThreadInput(dwMyID, dwCurID, TRUE);
+
+    // Get and store the current foreground lock timeout
+    DWORD lockTimeOut = 0;
+    ::SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &lockTimeOut, 0);
+    ::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
+
+    // Allow any window to set foreground
+    ::AllowSetForegroundWindow(ASFW_ANY);
+
+    // Set the window as foreground
+    ::SetForegroundWindow(handle);
+
+    // Restore the original foreground lock timeout
+    ::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)lockTimeOut, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
+
+    // Detach thread input
+    ::AttachThreadInput(dwMyID, dwCurID, FALSE);
+
+    // Additional focus enforcement
+    ::SetWindowPos(handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    ::SetWindowPos(handle, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    ::SetFocus(handle);
+    ::SetActiveWindow(handle);
+
+    return Napi::Boolean::New(env, true);
+}
+
 Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "getActiveWindow"), Napi::Function::New (env, getActiveWindow));
     exports.Set (Napi::String::New (env, "getMonitorFromWindow"), Napi::Function::New (env, getMonitorFromWindow));
@@ -419,6 +464,7 @@ Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "getMonitors"), Napi::Function::New (env, getMonitors));
     exports.Set (Napi::String::New (env, "createProcess"), Napi::Function::New (env, createProcess));
     exports.Set (Napi::String::New (env, "getProcessMainWindow"), Napi::Function::New (env, getProcessMainWindow));
+    exports.Set (Napi::String::New (env, "forceFocus"), Napi::Function::New (env, forceFocus));
 
     return exports;
 }

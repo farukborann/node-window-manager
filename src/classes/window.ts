@@ -117,6 +117,11 @@ export class Window {
     }
   }
 
+  forceFocus() {
+    if (!addon || process.platform !== "win32") return;
+    return addon.forceFocus(this.id);
+  }
+
   redraw() {
     if (!addon || !addon.redrawWindow) return;
     addon.redrawWindow(this.id);
