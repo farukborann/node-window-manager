@@ -1,17 +1,10 @@
+import { EventEmitter } from "events";
 import { platform } from "os";
 import { resolve } from "path";
 
 import { EmptyMonitor } from "./classes/empty-monitor";
 import { Monitor } from "./classes/monitor";
 import { Window } from "./classes/window";
-import { WindowEventManager } from "./classes/window-event-manager";
-import {
-  WindowActivatedEvent,
-  WindowCreatedEvent,
-  WindowDestroyedEvent,
-  WindowTitleChangedEvent,
-  WindowBoundsChangedEvent,
-} from "./interfaces";
 
 let addon: any;
 
@@ -19,12 +12,50 @@ if (platform() === "win32" || platform() === "darwin") {
   addon = require(`node-gyp-build`)(resolve(__dirname, ".."));
 }
 
-export class WindowManager {
-  private windowEventManager: WindowEventManager;
+let interval: any = null;
 
+let registeredEvents: string[] = [];
+
+class WindowManager extends EventEmitter {
   constructor() {
-    this.windowEventManager = new WindowEventManager(this);
+    super();
+
+    let lastId: number;
+
     if (!addon) return;
+
+    this.on("newListener", (event) => {
+      if (event === "window-activated") {
+        lastId = addon.getActiveWindow();
+      }
+
+      if (registeredEvents.indexOf(event) !== -1) return;
+
+      if (event === "window-activated") {
+        interval = setInterval(async () => {
+          const win = addon.getActiveWindow();
+
+          if (lastId !== win) {
+            lastId = win;
+            this.emit("window-activated", new Window(win));
+          }
+        }, 50);
+      } else {
+        return;
+      }
+
+      registeredEvents.push(event);
+    });
+
+    this.on("removeListener", (event) => {
+      if (this.listenerCount(event) > 0) return;
+
+      if (event === "window-activated") {
+        clearInterval(interval);
+      }
+
+      registeredEvents = registeredEvents.filter((x) => x !== event);
+    });
   }
 
   requestAccessibility = () => {
@@ -62,37 +93,6 @@ export class WindowManager {
     if (!addon || !addon.createProcess) return;
     return addon.createProcess(path, cmd);
   };
-
-  /**
-   * Listen for window-activated event
-   */
-  onWindowActivated(cb: (payload: WindowActivatedEvent) => void) {
-    return this.windowEventManager.on("window-activated", cb);
-  }
-  /**
-   * Listen for window-created event
-   */
-  onWindowCreated(cb: (payload: WindowCreatedEvent) => void) {
-    return this.windowEventManager.on("window-created", cb);
-  }
-  /**
-   * Listen for window-destroyed event
-   */
-  onWindowDestroyed(cb: (payload: WindowDestroyedEvent) => void) {
-    return this.windowEventManager.on("window-destroyed", cb);
-  }
-  /**
-   * Listen for window-title-changed event
-   */
-  onWindowTitleChanged(cb: (payload: WindowTitleChangedEvent) => void) {
-    return this.windowEventManager.on("window-title-changed", cb);
-  }
-  /**
-   * Listen for window-bounds-changed event
-   */
-  onWindowBoundsChanged(cb: (payload: WindowBoundsChangedEvent) => void) {
-    return this.windowEventManager.on("window-bounds-changed", cb);
-  }
 }
 
 const windowManager = new WindowManager();
