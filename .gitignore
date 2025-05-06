@@ -1,7 +1,6 @@
 node_modules
 *.log*
 build
-dist
 .vscode/ipch
 .vscode/c_cpp_properties.json
 .build
