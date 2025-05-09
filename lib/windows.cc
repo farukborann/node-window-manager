@@ -405,38 +405,24 @@ Napi::Boolean forceFocus(const Napi::CallbackInfo& info) {
         return Napi::Boolean::New(env, false);
     }
 
-    // Get the current foreground window and thread IDs
-    HWND hCurWnd = ::GetForegroundWindow();
-    DWORD dwMyID = ::GetCurrentThreadId();
-    DWORD dwCurID = ::GetWindowThreadProcessId(hCurWnd, NULL);
+    BYTE keyState[256] = {0};
+    // Alt tuşu basılı değilse, sanal olarak bas
+    if (::GetKeyboardState((LPBYTE)&keyState)) {
+        if (!(keyState[VK_MENU] & 0x80)) {
+            ::keybd_event(VK_MENU, 0, KEYEVENTF_EXTENDEDKEY | 0, 0);
+        }
+    }
 
-    // Attach our thread's input to the current thread
-    ::AttachThreadInput(dwMyID, dwCurID, TRUE);
+    BOOL result = ::SetForegroundWindow(handle);
 
-    // Get and store the current foreground lock timeout
-    DWORD lockTimeOut = 0;
-    ::SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &lockTimeOut, 0);
-    ::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
+    // Alt tuşunu bırak
+    if (::GetKeyboardState((LPBYTE)&keyState)) {
+        if (!(keyState[VK_MENU] & 0x80)) {
+            ::keybd_event(VK_MENU, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+        }
+    }
 
-    // Allow any window to set foreground
-    ::AllowSetForegroundWindow(ASFW_ANY);
-
-    // Set the window as foreground
-    ::SetForegroundWindow(handle);
-
-    // Restore the original foreground lock timeout
-    ::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)lockTimeOut, SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
-
-    // Detach thread input
-    ::AttachThreadInput(dwMyID, dwCurID, FALSE);
-
-    // Additional focus enforcement
-    ::SetWindowPos(handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    ::SetWindowPos(handle, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    ::SetFocus(handle);
-    ::SetActiveWindow(handle);
-
-    return Napi::Boolean::New(env, true);
+    return Napi::Boolean::New(env, result);
 }
 
 Napi::Object Init (Napi::Env env, Napi::Object exports) {
