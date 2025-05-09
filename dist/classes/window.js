@@ -1,10 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const __1 = require("..");
-const extract_file_icon_1 = __importDefault(require("extract-file-icon"));
 const ax_window_1 = require("./ax-window");
 const empty_monitor_1 = require("./empty-monitor");
 const monitor_1 = require("./monitor");
@@ -145,9 +141,6 @@ class Window {
         if (!__1.addon || !__1.addon.getWindowOpacity)
             return 1;
         return __1.addon.getWindowOpacity(this.id);
-    }
-    getIcon(size = 64) {
-        return extract_file_icon_1.default(this.path, size);
     }
     setOwner(window) {
         if (!__1.addon || !__1.addon.setWindowOwner)

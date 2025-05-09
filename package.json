@@ -11,8 +11,8 @@
     "rebuild": "node-gyp rebuild",
     "rebuild-dev": "npm run rebuild -- --debug",
     "prepublishOnly": "npm run rebuild",
-    "prepare": "npm run build && npm run rebuild",
-    "example": "npm run build && node example.js"
+    "prepare": "npm run rebuild",
+    "example": "npm run rebuild && npm run build && node example.js"
   },
   "repository": {
     "type": "git",
@@ -37,7 +37,6 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
-    "extract-file-icon": "github:farukborann/extract-file-icon",
     "node-addon-api": "8.3.1",
     "node-gyp-build": "^4.8.3"
   }

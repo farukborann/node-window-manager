@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { AXWindow } from "./ax-window";
 import { EmptyMonitor } from "./empty-monitor";
 import { Monitor } from "./monitor";
@@ -25,7 +24,6 @@ export declare class Window {
     toggleTransparency(toggle: boolean): void;
     setOpacity(opacity: number): void;
     getOpacity(): any;
-    getIcon(size?: 16 | 32 | 64 | 256): Buffer;
     setOwner(window: Window | null | number): void;
     getOwner(): Window;
     /**
