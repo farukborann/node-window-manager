@@ -9,13 +9,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addon = exports.WindowManager = void 0;
+exports.addon = exports.AXWindow = exports.EmptyMonitor = exports.Monitor = exports.Window = exports.WindowManager = void 0;
 const events_1 = require("events");
 const os_1 = require("os");
 const path_1 = require("path");
+const ax_window_1 = require("./classes/ax-window");
+Object.defineProperty(exports, "AXWindow", { enumerable: true, get: function () { return ax_window_1.AXWindow; } });
 const empty_monitor_1 = require("./classes/empty-monitor");
+Object.defineProperty(exports, "EmptyMonitor", { enumerable: true, get: function () { return empty_monitor_1.EmptyMonitor; } });
 const monitor_1 = require("./classes/monitor");
+Object.defineProperty(exports, "Monitor", { enumerable: true, get: function () { return monitor_1.Monitor; } });
 const window_1 = require("./classes/window");
+Object.defineProperty(exports, "Window", { enumerable: true, get: function () { return window_1.Window; } });
 let addon;
 if ((0, os_1.platform)() === "win32" || (0, os_1.platform)() === "darwin") {
     exports.addon = addon = require(`node-gyp-build`)((0, path_1.resolve)(__dirname, ".."));

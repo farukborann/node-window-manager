@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { AXWindow } from "./classes/ax-window";
 import { EmptyMonitor } from "./classes/empty-monitor";
 import { Monitor } from "./classes/monitor";
 import { Window } from "./classes/window";
@@ -15,4 +16,4 @@ declare class WindowManager extends EventEmitter {
     getPrimaryMonitor: () => Monitor | EmptyMonitor;
     destroy: () => void;
 }
-export { WindowManager, IAXWindow, IRectangle, IMonitorInfo, addon };
+export { WindowManager, Window, Monitor, EmptyMonitor, AXWindow, IAXWindow, IRectangle, IMonitorInfo, addon, };
