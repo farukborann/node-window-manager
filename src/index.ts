@@ -5,6 +5,7 @@ import { resolve } from "path";
 import { EmptyMonitor } from "./classes/empty-monitor";
 import { Monitor } from "./classes/monitor";
 import { Window } from "./classes/window";
+import { IAXWindow, IRectangle, IMonitorInfo } from "./interfaces";
 
 let addon: any;
 
@@ -12,49 +13,41 @@ if (platform() === "win32" || platform() === "darwin") {
   addon = require(`node-gyp-build`)(resolve(__dirname, ".."));
 }
 
-let interval: any = null;
-
-let registeredEvents: string[] = [];
-
 class WindowManager extends EventEmitter {
-  constructor() {
-    super();
+  private interval: any = null;
+  private lastId: number | null = null;
 
-    let lastId: number;
+  constructor(interval: number = 50) {
+    super();
 
     if (!addon) return;
 
     this.on("newListener", (event) => {
       if (event === "window-activated") {
-        lastId = addon.getActiveWindow();
+        if (this.listenerCount("window-activated") === 0) {
+          this.lastId = addon.getActiveWindow();
+
+          this.interval = setInterval(async () => {
+            const win = addon.getActiveWindow();
+
+            if (this.lastId !== win) {
+              this.lastId = win;
+              this.emit("window-activated", new Window(win));
+            }
+          }, interval);
+        }
       }
-
-      if (registeredEvents.indexOf(event) !== -1) return;
-
-      if (event === "window-activated") {
-        interval = setInterval(async () => {
-          const win = addon.getActiveWindow();
-
-          if (lastId !== win) {
-            lastId = win;
-            this.emit("window-activated", new Window(win));
-          }
-        }, 50);
-      } else {
-        return;
-      }
-
-      registeredEvents.push(event);
     });
 
     this.on("removeListener", (event) => {
-      if (this.listenerCount(event) > 0) return;
-
       if (event === "window-activated") {
-        clearInterval(interval);
+        if (this.listenerCount("window-activated") === 0) {
+          if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = null;
+          }
+        }
       }
-
-      registeredEvents = registeredEvents.filter((x) => x !== event);
     });
   }
 
@@ -88,8 +81,15 @@ class WindowManager extends EventEmitter {
       return new EmptyMonitor();
     }
   };
+
+  destroy = () => {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
+    this.removeAllListeners();
+    this.lastId = null;
+  };
 }
 
-const windowManager = new WindowManager();
-
-export { windowManager, Window, addon };
+export { WindowManager, IAXWindow, IRectangle, IMonitorInfo, addon };
