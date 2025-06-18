@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { platform } from "os";
 import { resolve } from "path";
 
+import { AXWindow } from "./classes/ax-window";
 import { EmptyMonitor } from "./classes/empty-monitor";
 import { Monitor } from "./classes/monitor";
 import { Window } from "./classes/window";
@@ -92,4 +93,14 @@ class WindowManager extends EventEmitter {
   };
 }
 
-export { WindowManager, IAXWindow, IRectangle, IMonitorInfo, addon };
+export {
+  WindowManager,
+  Window,
+  Monitor,
+  EmptyMonitor,
+  AXWindow,
+  IAXWindow,
+  IRectangle,
+  IMonitorInfo,
+  addon,
+};
