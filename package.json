@@ -1,6 +1,6 @@
 {
   "name": "node-window-manager",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Manage windows in macOS, Windows",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,11 +12,13 @@
     "rebuild-dev": "npm run rebuild -- --debug",
     "prepublishOnly": "npm run rebuild",
     "prepare": "npm run rebuild",
-    "example": "npm run rebuild && npm run build && node example.js"
+    "example": "npm run rebuild && npm run build && node example.js",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sentialx/node-window-manager.git"
+    "url": "git+https://github.com/farukborann/node-window-manager.git"
   },
   "keywords": [
     "window-manager",
@@ -24,17 +26,23 @@
     "macos",
     "windows"
   ],
-  "author": "sentialx",
+  "author": "farukborann",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/sentialx/node-window-manager/issues"
+    "url": "https://github.com/farukborann/node-window-manager/issues"
   },
-  "homepage": "https://github.com/sentialx/node-window-manager#readme",
+  "homepage": "https://github.com/farukborann/node-window-manager#readme",
   "devDependencies": {
-    "@types/node": "^13.11.1",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "globals": "^15.0.0",
+    "typescript-eslint": "^8.0.0",
+    "eslint-plugin-import": "^2.29.0",
     "node-gyp": "^10.2.0",
-    "tslint": "6.1.1",
-    "typescript": "3.8.3"
+    "typescript": "^5.4.0"
   },
   "dependencies": {
     "node-addon-api": "8.3.1",
