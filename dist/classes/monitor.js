@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Monitor = void 0;
 const __1 = require("..");
 const os_1 = require("os");
 const getMonitorInfo = (id) => {
@@ -23,7 +24,7 @@ class Monitor {
     getScaleFactor() {
         if (!__1.addon || !__1.addon.getMonitorScaleFactor)
             return;
-        const numbers = os_1.release()
+        const numbers = (0, os_1.release)()
             .split(".")
             .map((d) => parseInt(d, 10));
         if (numbers[0] > 8 || (numbers[0] === 8 && numbers[1] >= 1)) {

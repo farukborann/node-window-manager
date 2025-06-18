@@ -9,23 +9,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.addon = exports.WindowManager = void 0;
 const events_1 = require("events");
 const os_1 = require("os");
 const path_1 = require("path");
 const empty_monitor_1 = require("./classes/empty-monitor");
 const monitor_1 = require("./classes/monitor");
 const window_1 = require("./classes/window");
-exports.Window = window_1.Window;
 let addon;
-exports.addon = addon;
-if (os_1.platform() === "win32" || os_1.platform() === "darwin") {
-    exports.addon = addon = require(`node-gyp-build`)(path_1.resolve(__dirname, ".."));
+if ((0, os_1.platform)() === "win32" || (0, os_1.platform)() === "darwin") {
+    exports.addon = addon = require(`node-gyp-build`)((0, path_1.resolve)(__dirname, ".."));
 }
-let interval = null;
-let registeredEvents = [];
 class WindowManager extends events_1.EventEmitter {
-    constructor() {
+    constructor(interval = 50) {
         super();
+        this.interval = null;
+        this.lastId = null;
         this.requestAccessibility = () => {
             if (!addon || !addon.requestAccessibility)
                 return true;
@@ -57,44 +56,41 @@ class WindowManager extends events_1.EventEmitter {
                 return new empty_monitor_1.EmptyMonitor();
             }
         };
-        this.createProcess = (path, cmd = "") => {
-            if (!addon || !addon.createProcess)
-                return;
-            return addon.createProcess(path, cmd);
+        this.destroy = () => {
+            if (this.interval) {
+                clearInterval(this.interval);
+                this.interval = null;
+            }
+            this.removeAllListeners();
+            this.lastId = null;
         };
-        let lastId;
         if (!addon)
             return;
         this.on("newListener", (event) => {
             if (event === "window-activated") {
-                lastId = addon.getActiveWindow();
+                if (this.listenerCount("window-activated") === 0) {
+                    this.lastId = addon.getActiveWindow();
+                    this.interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
+                        const win = addon.getActiveWindow();
+                        if (this.lastId !== win) {
+                            this.lastId = win;
+                            this.emit("window-activated", new window_1.Window(win));
+                        }
+                    }), interval);
+                }
             }
-            if (registeredEvents.indexOf(event) !== -1)
-                return;
-            if (event === "window-activated") {
-                interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
-                    const win = addon.getActiveWindow();
-                    if (lastId !== win) {
-                        lastId = win;
-                        this.emit("window-activated", new window_1.Window(win));
-                    }
-                }), 50);
-            }
-            else {
-                return;
-            }
-            registeredEvents.push(event);
         });
         this.on("removeListener", (event) => {
-            if (this.listenerCount(event) > 0)
-                return;
             if (event === "window-activated") {
-                clearInterval(interval);
+                if (this.listenerCount("window-activated") === 0) {
+                    if (this.interval) {
+                        clearInterval(this.interval);
+                        this.interval = null;
+                    }
+                }
             }
-            registeredEvents = registeredEvents.filter((x) => x !== event);
         });
     }
 }
-const windowManager = new WindowManager();
-exports.windowManager = windowManager;
+exports.WindowManager = WindowManager;
 //# sourceMappingURL=index.js.map

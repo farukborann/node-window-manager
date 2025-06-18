@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.EmptyMonitor = void 0;
 class EmptyMonitor {
     getBounds() {
         return { x: 0, y: 0, width: 0, height: 0 };

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Window = void 0;
 const __1 = require("..");
 const ax_window_1 = require("./ax-window");
 const empty_monitor_1 = require("./empty-monitor");

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.AXWindow = void 0;
 const __1 = require("..");
 class AXWindow {
     constructor(data) {
