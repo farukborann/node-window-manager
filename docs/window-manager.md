@@ -5,6 +5,7 @@ Get monitors and opened windows.
 ```typescript
 import { windowManager } from "node-window-manager";
 
+// Request accessibility permission on macOS
 windowManager.requestAccessibility();
 
 const window = windowManager.getActiveWindow();

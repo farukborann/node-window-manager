@@ -39,6 +39,33 @@ const { title } = window.getInfo();
 const title = window.getTitle();
 ```
 
+## Released in v2.3.0
+
+- **API changes:**
+
+  - **REMOVED:** `windowManager.createProcess()` method has been removed
+  - **REMOVED:** `window.getIcon()` method has been removed
+
+- **New features:**
+
+  - **macOS AXWindow support:** Enhanced accessibility window support for macOS
+  - New `window.getAXWindows()` method returns array of AXWindow objects
+  - AXWindow class with `focus()` method for precise window control
+  - Enhanced multi-window application support on macOS
+
+- **Development environment improvements:**
+
+  - Migrated from TSLint to ESLint for better TypeScript support
+  - Updated to modern ESLint v9 with flat config format
+  - Upgraded TypeScript to v5.4 for better type safety
+  - Enhanced C++ build system with C++17 standard support
+
+- **Documentation improvements:**
+  - Added comprehensive installation prerequisites for Windows (Visual Studio + C++ tools)
+  - Enhanced API documentation with better examples
+  - Added yarn support documentation
+  - Added dedicated AXWindow documentation
+
 ## Released in v2.2.5
 
-- **macOS AXWindow support added:** You can now use `window.getAXWindows()` to access accessibility windows (AXWindow) for a window's process. See the Window and AXWindow documentation for details.
+- **Bug fixes and minor improvements**

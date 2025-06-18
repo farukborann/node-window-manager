@@ -68,6 +68,20 @@ Gets the window opacity
 
 Returns `number` between 0 and 1.
 
+#### win.toggleTransparency(toggle: boolean) `Windows`
+
+- `toggle` boolean - enable or disable transparency
+
+Toggles window transparency.
+
+#### win.forceFocus() `Windows`
+
+Forces the window to gain focus. This is a stronger version of `bringToTop()` specifically for Windows.
+
+#### win.redraw() `Windows`
+
+Forces the window to redraw itself.
+
 #### win.getMonitor() `Windows`
 
 > NOTE: on macOS this method returns an `EmptyMonitor` object for compatibility.
@@ -92,12 +106,6 @@ Returns `Window`
 
 - `win` Window | number | null
   - pass null to unset window owner.
-
-#### win.getIcon(size: number) `Windows` `macOS`
-
-- `size` number - can be `16`, `32`, `64` or `256`. By default it's `64`.
-
-Returns a png Buffer
 
 #### win.getAXWindows() `macOS`
 

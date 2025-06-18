@@ -2,15 +2,15 @@
 
 Control monitors.
 
-> NOTE: Monitors are supported only on `Windows`, but on `macOS` there's a stub object 
-called `EmptyMonitor` for better cross-platform compatibility without checking whether 
-a returned monitor is `undefined`.
+> NOTE: Monitors are supported only on `Windows`, but on `macOS` there's a stub object
+> called `EmptyMonitor` for better cross-platform compatibility without checking whether
+> a returned monitor is `undefined`.
 
 ```typescript
-import { windowManager } from 'node-window-manager';
+import { windowManager } from "node-window-manager";
 
-// Gets height of the primary window working area.
-const { height } = windowManager.getPrimaryWindow().getWorkArea();
+// Gets height of the primary monitor working area.
+const { height } = windowManager.getPrimaryMonitor().getWorkArea();
 ```
 
 ### new Monitor(id: number)
@@ -56,5 +56,6 @@ Gets monitor scale factor (DPI).
 #### monitor.isValid() `Windows` `macOS`
 
 Returns:
+
 - On `Windows`: `true`
 - On `macOS`: `false`, since it's just an `EmptyMonitor` object.
